@@ -8,6 +8,32 @@
 
     <link rel="stylesheet" th:href="@{webjars/bootstrap/4.2.1/css/bootstrap.min.css}"/>
     <link rel="stylesheet" th:href="@{/css/main.css}"/>
+    <script>
+        // Function that will be called when a toggle is clicked.  It will send a request to the server to toggle the light.
+        function toggleLight(lightId) {
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    // Update the light status in the table.
+                    var lightStatus = document.getElementById(lightId).innerHTML;
+                    if (lightStatus == "Off") {
+                        document.getElementById(lightId).innerHTML = "On";
+                    } else {
+                        document.getElementById(lightId).innerHTML = "Off";
+                    }
+                }
+            };
+            xhttp.open("GET", "/toggle?valve=" + lightId, true);
+            xhttp.send();
+        }
+
+        function toggleLights() {
+            var xhttp = new XMLHttpRequest();
+            xhttp.open("GET", "/toggle?valve=0,1,2,3,4,5,6,7", true);
+            xhttp.send();
+        }
+
+    </script>
 
 </head>
 
@@ -26,9 +52,29 @@
         </h2>
     </div>
 
-    <ol>
-        <li th:each="task : ${tasks}" th:text="${task}"></li>
-    </ol>
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>Valve</th>
+            <th>Status</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="valve : ${valves}">
+            <td>${valve.name}</td>
+            <td id="${valve.pin}">
+                <button type="button" class="btn btn-primary" onclick="toggleLight(${valve.pin})">
+                    <span th:text="'${valve.state}'"></span>
+                </button>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <button type="button" class="btn btn-primary" onclick="toggleLights()">
+        Toggle All
+    </button>
+
 
 </main>
 <!-- /.container -->

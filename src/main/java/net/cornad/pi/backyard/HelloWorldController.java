@@ -13,7 +13,6 @@ import com.pi4j.io.gpio.PinState;
 import com.pi4j.io.gpio.RaspiPin;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 @Controller
@@ -26,11 +25,11 @@ public class HelloWorldController {
 
 
     public HelloWorldController(){
-        pins[0] = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_00, "Relay0_0", PinState.HIGH);
-        pins[1] = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_01, "Relay0_1", PinState.HIGH);
-        pins[2] = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_02, "Relay0_2", PinState.HIGH);
+        pins[0] = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_18, "Relay0_0", PinState.HIGH);
+        pins[1] = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_25, "Relay0_1", PinState.HIGH);
+        pins[2] = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_04, "Relay0_2", PinState.HIGH);
         pins[3] = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_03, "Relay0_3", PinState.HIGH);
-        pins[4] = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_04, "Relay0_4", PinState.HIGH);
+        pins[4] = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_02, "Relay0_4", PinState.HIGH);
         pins[5] = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_05, "Relay0_5", PinState.HIGH);
         pins[6] = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_06, "Relay0_6", PinState.HIGH);
         pins[7] = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_07, "Relay0_7", PinState.HIGH);
@@ -44,24 +43,18 @@ public class HelloWorldController {
     @Value("${welcome.message}")
     private String message;
 
-    private List<String> tasks = Arrays.asList("a", "b", "c", "d", "e", "f", "g");
+    private List<Valve> valves = new ArrayList<>();
 
     @GetMapping("/")
     public String main(Model model) {
         model.addAttribute("message", message);
-        model.addAttribute("tasks", tasks);
 
-        return "HelloWorld"; //view
-    }
+        for (int i = 0; i < 8; i++) {
+            valves.add(new Valve(i, "Relay" + i, false));
+        }
 
-    // /hello?name=kotlin
-    @GetMapping("/hello")
-    public String mainWithParam(
-            @RequestParam(name = "name", required = false, defaultValue = "")
-			String name, Model model) {
-
-        model.addAttribute("message", name);
-
+        model.addAttribute("valves", valves);
+        
         return "HelloWorld"; //view
     }
 
@@ -102,7 +95,23 @@ public class HelloWorldController {
 
     }
 
+    @GetMapping("/toggle")
+    public String relayControl(@RequestParam(name = "valve", required = true, defaultValue = "")
+                               final String valve, Model model) {
+        List<String> tasks = new ArrayList<>();
+        StringBuilder sb = new StringBuilder();
+        if(valve != null && valve.length() > 0) {
+            String[] turnOns = valve.split(",");
 
+            if(turnOns != null && turnOns.length > 0){
+                for(int i = 0; i < turnOns.length; i++){
+                    pins[Integer.valueOf(turnOns[i])].toggle();
+                    sb.append("Toggled").append(turnOns[i]).append("<br>");
+                }
+            }
+        }
+        return sb.toString();
+    }
 
 
 }
